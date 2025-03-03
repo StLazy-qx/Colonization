@@ -1,67 +1,71 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Wallet))]
+[RequireComponent(typeof(Wallet), (typeof(KnightCollection)))]
 
-public class Base : PoolableObject
+public class Base : CreatableObject
 {
     private readonly int _clickOnBaseAnimation = Animator.StringToHash("ClickOnBase");
 
-    [SerializeField] private KnightSpawner _knightSpawner;
+    [SerializeField] private KnightCreator _knightCreator;
+    [SerializeField] private DeterminePointSpawner _determinePoint;
+    [SerializeField] private BaseBuilder _baseBuilder;
+    [SerializeField] private BaseCollection _baseCollection;
     [SerializeField] private Flag _flagTemplate;
     [SerializeField] private Animator _animator;
 
     private Wallet _wallet;
     private Flag _flag;
+    private KnightCollection _knightCollector;
     private Knight _lostKnight;
-    private int _minKnightCoount = 1;
+    private int _beginKnightsCount = 3;
 
     public event Action ModeChanged;
-    public event Action<Vector3, Knight> NewBaseCreating;
-
-    public Wallet Wallet => _wallet;
 
     private void Awake()
     {
         _flag = Instantiate(_flagTemplate,transform);
         _wallet = GetComponent<Wallet>();
+        _knightCollector = GetComponent<KnightCollection>();
+
+        _baseBuilder.SetTemplate(this);
+
+        CloseBuildMode();
+    }
+
+    private void Start()
+    {
+        _baseCollection.Add(this);
+        InitialSquad();
     }
 
     private void OnEnable()
     {
-        _wallet.NewBaseResourceSpended += SendKnightToNewBase;
-        _wallet.NewUnitResourceSpended += _knightSpawner.CreateNewUnit;
-        _flag.PlaceSellected += OnSetMode;
-        _flag.KnightMovementFinished += OnSpawnNewBase;
+        _wallet.NewBaseResourceSpended += SendKnightBuildBase;
+        _wallet.NewUnitResourceSpended += CreateKnight;
     }
 
     private void OnDisable()
     {
-        _wallet.NewBaseResourceSpended -= SendKnightToNewBase;
-        _wallet.NewUnitResourceSpended -= _knightSpawner.CreateNewUnit;
-        _flag.PlaceSellected -= OnSetMode;
-        _flag.KnightMovementFinished -= OnSpawnNewBase;
+        _wallet.NewBaseResourceSpended -= SendKnightBuildBase;
+        _wallet.NewUnitResourceSpended -= CreateKnight;
+
+        if (_lostKnight != null)
+            _lostKnight.BaseBuilding -= CloseBuildMode;
     }
 
-    public void BuildTemplate(Vector3 buildPosition, Knight knight)
+    public void SetBuild()
     {
-        transform.position = buildPosition;
+        _beginKnightsCount = 0;
+        _knightCollector.Clear();
+        CloseBuildMode();
 
-        AcceptKnight(knight);
+        Debug.Log("Произошел ресет базы");
     }
 
     public bool TryGetFreeKnight(out Knight knight)
     {
-        knight = null;
-
-        if (_knightSpawner.TryGetFreeUnit(out Knight freeknight))
-        {
-            knight = freeknight;
-
-            return true;
-        }
-
-        return false;
+        return _knightCollector.TryGetFreeKnight(out knight);
     }
 
     public void PlayClikAnimation()
@@ -71,52 +75,66 @@ public class Base : PoolableObject
 
     public Flag GetFlag()
     {
-        if (_knightSpawner.ActiveObjectsCount > _minKnightCoount)
-        {
-            return _flag;
-        }
-
-        return null;
+        return _knightCollector.HasKnights() ? _flag : null;
     }
 
-    public void DisableKnightSpawning()
+    public void AcceptKnight(Knight knight)
     {
-        _knightSpawner.DisableBeginSpawning();
-    }
-
-    private void SendKnightToNewBase()
-    {
-        if (_knightSpawner.ActiveObjectsCount <= _minKnightCoount)
+        if (knight == null)
             return;
 
-        _knightSpawner.TryGetFreeUnit(out Knight freeKnight);
+        _knightCollector.Add(knight);
+        knight.Initialize(_wallet, _baseBuilder, _baseCollection);
 
-        Vector3 newBasePosition = _flag.transform.position;
-        _lostKnight = freeKnight;
-
-        _flag.GetDeliveryKnight(_lostKnight);
-
-        if (_lostKnight.TryGetComponent(out KnightMover knightMover))
-            knightMover.MoveToNewBase(newBasePosition);
+        if (knight.TryGetComponent(out KnightMover mover))
+        {
+            mover.GoToTarget(_determinePoint.GetPosition());
+        }
     }
 
-    private void AcceptKnight(Knight knight)
+    public void IncludeBuildMode()
     {
-        if (knight != null)
-            _knightSpawner.AddKnight(knight);
+        ModeChanged?.Invoke();
+        _flag.gameObject.SetActive(true);
     }
 
-    private void OnSpawnNewBase(Vector3 flagPosition)
+    public void CloseBuildMode()
     {
-        NewBaseCreating?.Invoke(flagPosition, _lostKnight);
-        _knightSpawner.RemoveUnit(_lostKnight);
-
-        _lostKnight = null;
+        _flag.gameObject.SetActive(false);
     }
 
-    private void OnSetMode()
+    private void InitialSquad()
     {
-        if (_flag.IsActive)
-            ModeChanged?.Invoke();
+        _knightCollector.Clear();
+
+        for (int i = 0; i < _beginKnightsCount; i++)
+            CreateKnight();
+    }
+
+    private void SendKnightBuildBase()
+    {
+        if (_knightCollector.HasKnights() == false)
+            return;
+
+        if (_knightCollector.TryGetFreeKnight(out Knight knight))
+        {
+            _lostKnight = knight;
+            _lostKnight.BaseBuilding += CloseBuildMode;
+
+            if (_lostKnight.TryGetComponent(out KnightMover knightMover))
+            {
+                knightMover.MoveToBuildBasePoint(_flag.transform.position);
+                _knightCollector.RemoveObject(_lostKnight);
+            }
+        }
+    }
+
+    private void CreateKnight()
+    {
+        Knight knight = (Knight)_knightCreator.
+            Create(_determinePoint.GetPosition());
+
+        knight.Initialize(_wallet, _baseBuilder, _baseCollection);
+        _knightCollector.Add(knight);
     }
 }

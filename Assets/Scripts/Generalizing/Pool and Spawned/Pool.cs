@@ -10,9 +10,6 @@ public class Pool<T> : MonoBehaviour where T : PoolableObject
 
     private List<T> _objectsPool = new List<T>();
 
-    public int CountActiveObjects => GetListActiveObjects().Count;
-    public int Count => _objectsPool.Count;
-
     protected T Template => _template;
     protected List<T> ObjectsPool => _objectsPool;
     protected Transform Container => _container;
@@ -22,7 +19,7 @@ public class Pool<T> : MonoBehaviour where T : PoolableObject
         if (_capacity > 0)
         {
             for (int i = 0; i < _capacity; i++)
-                CreateNewObject();
+                CreateObject();
         }
     }
 
@@ -31,34 +28,11 @@ public class Pool<T> : MonoBehaviour where T : PoolableObject
         T newObject = _objectsPool.FirstOrDefault(subject => subject.IsActive == false);
 
         if (newObject == null)
-            newObject = CreateNewObject();
+            newObject = CreateObject();
 
         ActivateObject(newObject, position);
 
         return newObject;
-    }
-
-    public List<T> GetListActiveObjects()
-    {
-        return _objectsPool.Where(subject => subject.IsActive).ToList();
-    }
-
-    public void AddUnit(T unit)
-    {
-        if (unit != null)
-        {
-            _objectsPool.Add(unit);
-            unit.transform.SetParent(_container);
-        }
-    }
-
-    public void RemoveUnit(T unit)
-    {
-        if (unit != null)
-        {
-            _objectsPool.Remove(unit);
-            unit.transform.SetParent(null);
-        }
     }
 
     public bool IsAllObjectsActive()
@@ -66,12 +40,7 @@ public class Pool<T> : MonoBehaviour where T : PoolableObject
         return _objectsPool.All(subject => subject.IsActive);
     }
 
-    public List<T> GetListObjects()
-    {
-        return new List<T>(_objectsPool);
-    }
-
-    protected virtual T CreateNewObject()
+    protected virtual T CreateObject()
     {
         T newObject = Instantiate(_template, _container);
 

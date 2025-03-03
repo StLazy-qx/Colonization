@@ -1,0 +1,1 @@
+public class KnightCreator : ObjectCreator<Knight> {}

@@ -6,7 +6,7 @@ using UnityEngine;
 public class ResourceScanner : MonoBehaviour
 {
     [SerializeField] private LayerMask _targetLayer;
-    [SerializeField] private BaseSpawner _baseSpawner;
+    [SerializeField] private BaseCollection _baseCollection;
     [SerializeField] private float _radius;
     [SerializeField] private float _interval;
 
@@ -29,12 +29,12 @@ public class ResourceScanner : MonoBehaviour
         if (_discoveredObjects.Count == 0)
             return;
 
-        foreach (Base @base in _baseSpawner.GetListActiveObjects())
+        foreach (Base @base in _baseCollection.GetActiveObjects())
         {
             if (@base.TryGetFreeKnight(out Knight knight))
             {
-                Vector3 newBasePosition = @base.transform.position;
-                knight.TargetCoin(_discoveredObjects.Dequeue(), newBasePosition);
+                Vector3 basePosition = @base.transform.position;
+                knight.TargetCoin(_discoveredObjects.Dequeue(), basePosition);
             }
         }
     }

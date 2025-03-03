@@ -9,7 +9,7 @@ public class Wallet : MonoBehaviour
     [SerializeField] private int _basePrice = 5;
 
     private int _coinCount;
-    public bool _isModeNewBase;
+    public bool _isModeBuildBase;
 
     public event Action<int> BalanceChanged;
     public event Action NewUnitResourceSpended;
@@ -18,7 +18,7 @@ public class Wallet : MonoBehaviour
     private void Awake()
     {
         _coinCount = 0;
-        _isModeNewBase = false;
+        _isModeBuildBase = false;
     }
 
     private void Start()
@@ -28,8 +28,8 @@ public class Wallet : MonoBehaviour
 
     private void Update()
     {
-        if (_isModeNewBase == false)
-            SpendCoinToNewObject(_unitPrice, NewUnitResourceSpended);
+        if (_isModeBuildBase == false)
+            SpendCoinToCreateObject(_unitPrice, NewUnitResourceSpended);
     }
 
     private void OnEnable()
@@ -51,7 +51,7 @@ public class Wallet : MonoBehaviour
 
     private void OnBayNewBase()
     {
-        _isModeNewBase = true;
+        _isModeBuildBase = true;
 
         StartCoroutine(AccumulateForBase());
     }
@@ -63,12 +63,12 @@ public class Wallet : MonoBehaviour
             yield return null;
         }
 
-        SpendCoinToNewObject(_basePrice, NewBaseResourceSpended);
+        SpendCoinToCreateObject(_basePrice, NewBaseResourceSpended);
 
-        _isModeNewBase = false;
+        _isModeBuildBase = false;
     }
 
-    private void SpendCoinToNewObject(int value, Action action)
+    private void SpendCoinToCreateObject(int value, Action action)
     {
         if (CanSpendCoin(value) == false)
             return;

@@ -1,6 +1,9 @@
+using System;
 using UnityEngine;
 
-public class Knight : PoolableObject
+[RequireComponent(typeof(KnightMover))]
+
+public class Knight : CreatableObject
 {
     private readonly string _layerName = "Knight";
 
@@ -8,6 +11,11 @@ public class Knight : PoolableObject
 
     private Coin _targetCoin;
     private Wallet _wallet;
+    private BaseBuilder _baseBuilder;
+    private BaseCollection _baseCollection;
+    private KnightMover _mover;
+
+    public event Action BaseBuilding;
 
     public bool IsBusy { get; private set; }
     public bool HasTargetCoin => _targetCoin;
@@ -17,14 +25,37 @@ public class Knight : PoolableObject
         IsBusy = false;
         _targetCoin = null;
         gameObject.layer = LayerMask.NameToLayer(_layerName);
+        _mover = GetComponent<KnightMover>();
 
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer(_layerName),
             LayerMask.NameToLayer(_layerName));
     }
 
-    public void Initialize(Wallet wallet)
+    private void OnEnable()
     {
+        _mover.FlagReached += BuildBase;
+    }
+
+    private void OnDisable()
+    {
+        _mover.FlagReached -= BuildBase;
+    }
+
+    public void Initialize(Wallet wallet,
+        BaseBuilder builder, BaseCollection baseCollection)
+    {
+        if (wallet == null)
+            return;
+
+        if (builder == null)
+            return;        
+        
+        if (baseCollection == null)
+            return;
+
         _wallet = wallet;
+        _baseBuilder = builder;
+        _baseCollection = baseCollection;
     }
 
     public void ToBusy()
@@ -70,5 +101,17 @@ public class Knight : PoolableObject
     {
         if (_targetCoin == null)
             return;
+    }
+
+    private void BuildBase(Vector3 buildPosition)
+    {
+        Base newBase = (Base)_baseBuilder.Create(buildPosition);
+
+        if (newBase != null)
+        {
+            _baseCollection.Add(newBase);
+            BaseBuilding?.Invoke();
+            newBase.AcceptKnight(this);
+        }
     }
 }

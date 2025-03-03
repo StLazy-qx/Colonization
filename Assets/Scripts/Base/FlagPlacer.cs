@@ -2,72 +2,43 @@ using UnityEngine;
 
 public class FlagPlacer : MonoBehaviour
 {
-    [SerializeField] private PlayerInput _input;
-    [SerializeField] private LayerMask _groundLayer;
-    [SerializeField] private LayerMask _restrictedLayer;
-    [SerializeField] private LayerMask _flagLayer;
-    
+    [SerializeField] private RaycastInteractor _raycastInteractor;
+
     private Flag _flag;
-    private Camera _mainCamera;
+    private Base _selectedBase;
 
-    private void Awake()
+    public void OnInstallFlag()
     {
-        _mainCamera = Camera.main;
-    }
-
-    private void OnEnable()
-    {
-        _input.FlagModeSetting += OnTryPlaceFlag;
-    }
-
-    private void OnDisable()
-    {
-        _input.FlagModeSetting -= OnTryPlaceFlag;
-    }
-
-    private void OnTryPlaceFlag()
-    {
-        Ray ray = _mainCamera.ScreenPointToRay(Input.mousePosition);
-
-        if (Physics.Raycast(ray, out RaycastHit hit) == false)
+        if (_raycastInteractor.TryGetRaycastHit(Input.mousePosition,
+            out GameObject hitObject, out Vector3 hitPoint) == false)
+        {
             return;
-
-        GameObject hitObject = hit.collider.gameObject;
-
-        if (_flag == null && hit.collider.TryGetComponent(out Base tempBase))
-        {
-            tempBase.PlayClikAnimation();
-            _flag = tempBase.GetFlag();
         }
-        else if (_flag != null && IsValidPlacement(hitObject))
+
+        if (_flag == null && hitObject.TryGetComponent(out Base @base))
         {
-            SetFlag(hit.point);
+            _selectedBase = @base;
+            _selectedBase.PlayClikAnimation();
+            _flag = _selectedBase.GetFlag();
         }
-        else if (IsOnLayer(hitObject, _flagLayer) && 
-            hit.collider.TryGetComponent(out Flag clickedFlag))
+        else if (_flag != null && _raycastInteractor.IsValidPlacement(hitObject))
         {
-            clickedFlag.Deactivate();
+            _selectedBase.IncludeBuildMode();
+            SetFlagPosition(hitPoint);
+        }
+        else if (_raycastInteractor.IsFlag(hitObject) &&
+            hitObject.TryGetComponent(out Flag clickedFlag))
+        {
+            clickedFlag.gameObject.SetActive(false);
         }
     }
 
-    private bool IsValidPlacement(GameObject gameObject)
-    {
-        return IsOnLayer(gameObject, _groundLayer) && 
-            IsOnLayer(gameObject, _restrictedLayer) == false;
-    }
-
-    private void SetFlag(Vector3 position)
+    private void SetFlagPosition(Vector3 position)
     {
         float flagHeightOffset = _flag.transform.localScale.y;
 
-        _flag.Activate();
-
-        _flag.transform.position = new Vector3(position.x, position.y + flagHeightOffset, position.z);
+        _flag.transform.position = new Vector3
+            (position.x, position.y + flagHeightOffset, position.z);
         _flag = null;
-    }
-
-    private bool IsOnLayer(GameObject obj, LayerMask layerMask)
-    {
-        return ((1 << obj.layer) & layerMask) != 0;
     }
 }

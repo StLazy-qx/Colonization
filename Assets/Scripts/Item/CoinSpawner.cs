@@ -20,9 +20,9 @@ public class CoinSpawner : Spawner<Coin>
         _delay = new WaitForSeconds(_cooldown);
     }
 
-    protected override void DistributeObjects()
+    protected override void DistributeObject()
     {
-        Vector3 spawnPosition = DetermineSpawnCoordinate();
+        Vector3 spawnPosition = DetermineSpawnPoint();
 
         if (IsValidPoint(spawnPosition))
         {
@@ -37,7 +37,7 @@ public class CoinSpawner : Spawner<Coin>
     {
         while (PoolObjects.IsAllObjectsActive() == false)
         {
-            DistributeObjects();
+            DistributeObject();
 
             yield return _delay;
         }

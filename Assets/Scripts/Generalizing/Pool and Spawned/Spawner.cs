@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class Spawner<T> : MonoBehaviour where T : PoolableObject
@@ -18,12 +17,7 @@ public abstract class Spawner<T> : MonoBehaviour where T : PoolableObject
         _poolObjects.Initialize();
     }
 
-    public List<T> GetListActiveObjects()
-    {
-        return PoolObjects.GetListActiveObjects();
-    }
-
-    protected Vector3 DetermineSpawnCoordinate()
+    protected Vector3 DetermineSpawnPoint()
     {
         Vector3 center = _spawnPlace.position;
 
@@ -37,5 +31,5 @@ public abstract class Spawner<T> : MonoBehaviour where T : PoolableObject
 
     protected virtual void OnAwake() {}
 
-    protected abstract void DistributeObjects();
+    protected abstract void DistributeObject();
 }

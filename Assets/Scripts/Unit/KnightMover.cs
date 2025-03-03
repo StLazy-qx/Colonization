@@ -9,13 +9,14 @@ public class KnightMover : MonoBehaviour
     [SerializeField] private ObstacleMoveHandler _obstacleHandler;
 
     private Vector3 _collectionPosition;
+    private Vector3 _baseBuildPosition;
     private Rigidbody _rigidbody;
     private float _moveSpeed = 25f;
     private float _rotationSpeed = 10f;
     private float _distanceToTarget = 0.15f;
     private float _distanceToFlag = 3f;
 
-    public event Action FlagReached;
+    public event Action<Vector3> FlagReached;
 
     private void Awake()
     {
@@ -27,14 +28,16 @@ public class KnightMover : MonoBehaviour
         _obstacleHandler.Init(_rigidbody, _moveSpeed);
     }
 
-    public void MoveToNewBase(Vector3 position)
+    public void MoveToBuildBasePoint(Vector3 position)
     {
         _knight.ToBusy();
 
-        Vector3 finalTarget = position +
+        Vector3 buildPoint = position +
             (transform.position - position).normalized * _distanceToFlag;
 
-        StartCoroutine(MoveSequence(finalTarget, OnFlagReached));
+        _baseBuildPosition = new Vector3(position.x, 0, position.z);
+
+        StartCoroutine(MoveSequence(buildPoint, OnFlagReached));
     }
 
     public void GoToTarget(Vector3 targetPosition)
@@ -119,7 +122,7 @@ public class KnightMover : MonoBehaviour
 
     private void OnFlagReached()
     {
-        FlagReached?.Invoke();
+        FlagReached?.Invoke(_baseBuildPosition);
         _knight.ToFree();
     }
 

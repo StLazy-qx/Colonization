@@ -1,6 +1,6 @@
 public class CoinPool : Pool<Coin>
 {
-    protected override Coin CreateNewObject()
+    protected override Coin CreateObject()
     {
         Coin newCoin = Instantiate(Template, Container);
 
