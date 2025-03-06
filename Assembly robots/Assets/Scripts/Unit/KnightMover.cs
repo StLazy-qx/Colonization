@@ -95,6 +95,8 @@ public class KnightMover : MonoBehaviour
 
     private IEnumerator MoveToTarget(Vector3 target)
     {
+        float moveTimeout = 2f;
+        float elapsedTime = 0f;
         Vector3 flatTarget = new Vector3(target.x, transform.position.y, target.z);
 
         while (transform.position.IsEnoughClose(flatTarget, _distanceToTarget) == false)
@@ -106,6 +108,10 @@ public class KnightMover : MonoBehaviour
             }
 
             MoveTowards(flatTarget);
+            elapsedTime += Time.deltaTime;
+
+            if (elapsedTime > moveTimeout)
+                yield break;
 
             yield return null;
         }

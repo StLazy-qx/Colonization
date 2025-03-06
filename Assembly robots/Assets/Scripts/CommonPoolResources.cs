@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,6 +7,8 @@ public class CommonPoolResources : MonoBehaviour
 {
     private List<Coin> _discoveredResources = new();
     private List<Coin> _usedResources = new();
+
+    public event Action AddNewResource;
 
     public void AddResource(Coin coin)
     {
@@ -19,26 +22,20 @@ public class CommonPoolResources : MonoBehaviour
         }
 
         _discoveredResources.Add(coin);
+        AddNewResource?.Invoke();
     }
 
     public bool TryGetResource(out Coin coin)
     {
-        coin = null;
+        coin = _discoveredResources.FirstOrDefault();
 
-        foreach (Coin currentCoin in _discoveredResources)
-        {
-            if (_usedResources.Contains(currentCoin) == false)
-            {
-                coin = currentCoin;
+        if (coin == null)
+            return false;
 
-                _discoveredResources.Remove(coin);
-                _usedResources.Add(coin);
+        _discoveredResources.Remove(coin);
+        _usedResources.Add(coin);
 
-                return true;
-            }
-        }
-
-        return false;
+        return true;
     }
 
     private void CleanUsedResources()

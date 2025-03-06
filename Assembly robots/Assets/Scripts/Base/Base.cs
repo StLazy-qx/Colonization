@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -39,17 +40,12 @@ public class Base : CreatableObject
         InitialSquad();
     }
 
-    private void Update()
-    {
-        if (_isModeCollectResource)
-            CollectResources();
-    }
-
     private void OnEnable()
     {
         _wallet.NewBaseResourceSpended += SendKnightBuildBase;
         _wallet.NewUnitResourceSpended += CreateKnight;
         _flagPlacer.Disabled += EnableResourceCollection;
+        _resourcePool.AddNewResource += CollectResources;
     }
 
     private void OnDisable()
@@ -57,6 +53,7 @@ public class Base : CreatableObject
         _wallet.NewBaseResourceSpended -= SendKnightBuildBase;
         _wallet.NewUnitResourceSpended -= CreateKnight;
         _flagPlacer.Disabled -= EnableResourceCollection;
+        _resourcePool.AddNewResource += CollectResources;
     }
 
     public void PlayClikAnimation()
@@ -110,11 +107,15 @@ public class Base : CreatableObject
 
     private void CollectResources()
     {
-        while (TryGetFreeKnight(out Knight knight))
+        if (_isModeCollectResource)
         {
-            if (_resourcePool.TryGetResource(out Coin coin))
+            foreach (Knight freeKnight in _knights.Where
+                (knight => knight.IsBusy == false))
             {
-                knight.SetTargetCoin(coin);
+                if (_resourcePool.TryGetResource(out Coin coin))
+                {
+                    freeKnight.SetTargetCoin(coin);
+                }
             }
         }
     }
@@ -143,7 +144,6 @@ public class Base : CreatableObject
 
     private bool TryGetFreeKnight(out Knight knight)
     {
-        knight = null;
         knight = _knights.FirstOrDefault(knight => knight.IsBusy == false);
 
         return knight != null;

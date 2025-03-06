@@ -105,6 +105,5 @@ public class Knight : CreatableObject
 
         newBase.AcceptKnight(this);
         BaseBuildFinished?.Invoke(newBase.SpawnPosition.position);
-        ToFree();
     }
 }
