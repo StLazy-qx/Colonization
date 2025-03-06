@@ -1,19 +1,19 @@
 using UnityEngine;
 
-public class BaseBuilder : ObjectCreator<Base>  
+public class BaseBuilder : ObjectCreator<Base>
 {
-    [SerializeField] private Base _baseTemplate;
+    public void SetTemplate(Base @base)
+    {
+        if (@base == null)
+            return;
+
+        Template = @base;
+    }
 
     public override CreatableObject Create(Vector3 position)
     {
-        if (_baseTemplate == null)
-        {
-            Debug.LogError("Base template is not set!");
-            return null;
-        }
-
-        Base newBase = Instantiate(_baseTemplate, position, Quaternion.identity);
-        newBase.SetBuild(); // Обнуляем рыцарей и выключаем флаг
+        Base newBase = (Base)base.Create(position);
+        newBase.InItializeBuild();
 
         return newBase;
     }

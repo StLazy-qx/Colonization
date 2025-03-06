@@ -28,6 +28,16 @@ public class KnightMover : MonoBehaviour
         _obstacleHandler.Init(_rigidbody, _moveSpeed);
     }
 
+    private void OnEnable()
+    {
+        _knight.BaseBuildFinished += MoveToBaseSpawner;
+    }
+
+    private void OnDisable()
+    {
+        _knight.BaseBuildFinished -= MoveToBaseSpawner;
+    }
+
     public void MoveToBuildBasePoint(Vector3 position)
     {
         _knight.ToBusy();
@@ -46,6 +56,7 @@ public class KnightMover : MonoBehaviour
             return;
 
         _knight.ToBusy();
+
         _collectionPosition = transform.position;
 
         if (_knight.HasTargetCoin)
@@ -60,10 +71,15 @@ public class KnightMover : MonoBehaviour
         }
     }
 
-    private IEnumerator MoveSequence(Vector3 target, Action onComplete)
+    private void MoveToBaseSpawner(Vector3 position)
+    {
+        StartCoroutine(MoveToTarget(position));
+    }
+
+    private IEnumerator MoveSequence(Vector3 target, Action onAction)
     {
         yield return MoveToTarget(target);
-        onComplete?.Invoke();
+        onAction?.Invoke();
     }
 
     private IEnumerator MoveSequence(Vector3 target1, Action action1, Vector3 target2, Action action2, Action action3)

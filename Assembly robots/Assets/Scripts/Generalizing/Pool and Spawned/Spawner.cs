@@ -9,8 +9,6 @@ public abstract class Spawner<T> : MonoBehaviour where T : PoolableObject
 
     protected Pool<T> PoolObjects => _poolObjects;
 
-    public Transform SpawnPlace => _spawnPlace;
-
     private void Awake()
     {
         OnAwake();

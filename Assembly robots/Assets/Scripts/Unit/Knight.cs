@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(KnightMover))]
+[RequireComponent(typeof(KnightMover),typeof(BaseBuilder))]
 
 public class Knight : CreatableObject
 {
@@ -11,11 +11,11 @@ public class Knight : CreatableObject
 
     private Coin _targetCoin;
     private Wallet _wallet;
+    private Base _base;
     private BaseBuilder _baseBuilder;
-    private BaseCollection _baseCollection;
     private KnightMover _mover;
 
-    public event Action BaseBuilding;
+    public event Action<Vector3> BaseBuildFinished;
 
     public bool IsBusy { get; private set; }
     public bool HasTargetCoin => _targetCoin;
@@ -26,6 +26,7 @@ public class Knight : CreatableObject
         _targetCoin = null;
         gameObject.layer = LayerMask.NameToLayer(_layerName);
         _mover = GetComponent<KnightMover>();
+        _baseBuilder = GetComponent<BaseBuilder>();
 
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer(_layerName),
             LayerMask.NameToLayer(_layerName));
@@ -41,21 +42,16 @@ public class Knight : CreatableObject
         _mover.FlagReached -= BuildBase;
     }
 
-    public void Initialize(Wallet wallet,
-        BaseBuilder builder, BaseCollection baseCollection)
+    public void Initialize(Wallet wallet, Base @base)
     {
-        if (wallet == null)
-            return;
-
-        if (builder == null)
-            return;        
-        
-        if (baseCollection == null)
+        if (wallet == null && @base == null)
             return;
 
         _wallet = wallet;
-        _baseBuilder = builder;
-        _baseCollection = baseCollection;
+        _base = @base;
+
+        _baseBuilder.SetTemplate(_base);
+        ToFree();
     }
 
     public void ToBusy()
@@ -68,7 +64,7 @@ public class Knight : CreatableObject
         IsBusy = false;
     }
 
-    public void TargetCoin(Coin coin, Vector3 collectionPoint)
+    public void SetTargetCoin(Coin coin)
     {
         VerifyCoin();
 
@@ -107,11 +103,8 @@ public class Knight : CreatableObject
     {
         Base newBase = (Base)_baseBuilder.Create(buildPosition);
 
-        if (newBase != null)
-        {
-            _baseCollection.Add(newBase);
-            BaseBuilding?.Invoke();
-            newBase.AcceptKnight(this);
-        }
+        newBase.AcceptKnight(this);
+        BaseBuildFinished?.Invoke(newBase.SpawnPosition.position);
+        ToFree();
     }
 }

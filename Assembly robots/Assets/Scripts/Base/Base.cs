@@ -1,69 +1,62 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(Wallet), (typeof(KnightCollection)))]
+[RequireComponent(typeof(Wallet))]
 
 public class Base : CreatableObject
 {
     private readonly int _clickOnBaseAnimation = Animator.StringToHash("ClickOnBase");
 
+    [SerializeField] private CommonPoolResources _resourcePool;
+    [SerializeField] private FlagPlacer _flagPlacer;
     [SerializeField] private KnightCreator _knightCreator;
     [SerializeField] private DeterminePointSpawner _determinePoint;
-    [SerializeField] private BaseBuilder _baseBuilder;
-    [SerializeField] private BaseCollection _baseCollection;
-    [SerializeField] private Flag _flagTemplate;
     [SerializeField] private Animator _animator;
 
     private Wallet _wallet;
-    private Flag _flag;
-    private KnightCollection _knightCollector;
     private Knight _lostKnight;
+    private Vector3 _buildTargetPosition;
     private int _beginKnightsCount = 3;
+    private int _minKnightsCount = 1;
+    private bool _isModeCollectResource = true;
+
+    private List<Knight> _knights = new List<Knight>();
 
     public event Action ModeChanged;
 
+    public bool HasKnights => _knights.Count > _minKnightsCount;
+    public Transform SpawnPosition => _determinePoint.Position;
+
     private void Awake()
     {
-        _flag = Instantiate(_flagTemplate,transform);
         _wallet = GetComponent<Wallet>();
-        _knightCollector = GetComponent<KnightCollection>();
-
-        _baseBuilder.SetTemplate(this);
-
-        CloseBuildMode();
     }
 
     private void Start()
     {
-        _baseCollection.Add(this);
         InitialSquad();
+    }
+
+    private void Update()
+    {
+        if (_isModeCollectResource)
+            CollectResources();
     }
 
     private void OnEnable()
     {
         _wallet.NewBaseResourceSpended += SendKnightBuildBase;
         _wallet.NewUnitResourceSpended += CreateKnight;
+        _flagPlacer.Disabled += EnableResourceCollection;
     }
 
     private void OnDisable()
     {
         _wallet.NewBaseResourceSpended -= SendKnightBuildBase;
         _wallet.NewUnitResourceSpended -= CreateKnight;
-
-        if (_lostKnight != null)
-            _lostKnight.BaseBuilding -= CloseBuildMode;
-    }
-
-    public void SetBuild()
-    {
-        _beginKnightsCount = 0;
-        _knightCollector.Clear();
-        CloseBuildMode();
-    }
-
-    public bool TryGetFreeKnight(out Knight knight)
-    {
-        return _knightCollector.TryGetFreeKnight(out knight);
+        _flagPlacer.Disabled -= EnableResourceCollection;
     }
 
     public void PlayClikAnimation()
@@ -71,9 +64,16 @@ public class Base : CreatableObject
         _animator.SetTrigger(_clickOnBaseAnimation);
     }
 
-    public Flag GetFlag()
+    public void InItializeBuild()
     {
-        return _knightCollector.HasKnights() ? _flag : null;
+        _isModeCollectResource = true;
+        _beginKnightsCount = 0;
+        _knights.Clear();
+    }
+
+    public void SetBuildPosition(Vector3 position)
+    {
+        _buildTargetPosition = position;
     }
 
     public void AcceptKnight(Knight knight)
@@ -81,8 +81,8 @@ public class Base : CreatableObject
         if (knight == null)
             return;
 
-        _knightCollector.Add(knight);
-        knight.Initialize(_wallet, _baseBuilder, _baseCollection);
+        _knights.Add(knight);
+        knight.Initialize(_wallet, this);
 
         if (knight.TryGetComponent(out KnightMover mover))
         {
@@ -90,41 +90,63 @@ public class Base : CreatableObject
         }
     }
 
-    public void IncludeBuildMode()
+    public void EnableResourceCollection()
     {
-        ModeChanged?.Invoke();
-        _flag.gameObject.SetActive(true);
+        _isModeCollectResource = true;
     }
 
-    public void CloseBuildMode()
+    public void DisableResourceCollection()
     {
-        _flag.gameObject.SetActive(false);
+        _isModeCollectResource = false;
+
+        ModeChanged?.Invoke();
     }
 
     private void InitialSquad()
     {
-        _knightCollector.Clear();
-
         for (int i = 0; i < _beginKnightsCount; i++)
             CreateKnight();
     }
 
-    private void SendKnightBuildBase()
+    private void CollectResources()
     {
-        if (_knightCollector.HasKnights() == false)
-            return;
-
-        if (_knightCollector.TryGetFreeKnight(out Knight knight))
+        while (TryGetFreeKnight(out Knight knight))
         {
-            _lostKnight = knight;
-            _lostKnight.BaseBuilding += CloseBuildMode;
-
-            if (_lostKnight.TryGetComponent(out KnightMover knightMover))
+            if (_resourcePool.TryGetResource(out Coin coin))
             {
-                knightMover.MoveToBuildBasePoint(_flag.transform.position);
-                _knightCollector.RemoveObject(_lostKnight);
+                knight.SetTargetCoin(coin);
             }
         }
+    }
+
+    private void SendKnightBuildBase()
+    {
+        if (HasKnights == false) 
+            return;
+
+        if (_isModeCollectResource == false)
+        {
+            if (TryGetFreeKnight(out Knight knight))
+            {
+                _lostKnight = knight;
+
+                if (_lostKnight.TryGetComponent(out KnightMover knightMover))
+                {
+                    knightMover.MoveToBuildBasePoint(_buildTargetPosition);
+                    _knights.Remove(_lostKnight);
+                }
+            }
+
+            EnableResourceCollection();
+        }
+    }
+
+    private bool TryGetFreeKnight(out Knight knight)
+    {
+        knight = null;
+        knight = _knights.FirstOrDefault(knight => knight.IsBusy == false);
+
+        return knight != null;
     }
 
     private void CreateKnight()
@@ -132,7 +154,7 @@ public class Base : CreatableObject
         Knight knight = (Knight)_knightCreator.
             Create(_determinePoint.GetPosition());
 
-        knight.Initialize(_wallet, _baseBuilder, _baseCollection);
-        _knightCollector.Add(knight);
+        knight.Initialize(_wallet, this);
+        _knights.Add(knight);
     }
 }
