@@ -45,7 +45,7 @@ public class Base : CreatableObject
         _wallet.NewBaseResourceSpended += SendKnightBuildBase;
         _wallet.NewUnitResourceSpended += CreateKnight;
         _flagPlacer.Disabled += EnableResourceCollection;
-        _resourcePool.AddNewResource += CollectResources;
+        _resourcePool.ResourceToCollectioning += CollectResources;
     }
 
     private void OnDisable()
@@ -53,7 +53,7 @@ public class Base : CreatableObject
         _wallet.NewBaseResourceSpended -= SendKnightBuildBase;
         _wallet.NewUnitResourceSpended -= CreateKnight;
         _flagPlacer.Disabled -= EnableResourceCollection;
-        _resourcePool.AddNewResource += CollectResources;
+        _resourcePool.ResourceToCollectioning += CollectResources;
     }
 
     public void PlayClikAnimation()

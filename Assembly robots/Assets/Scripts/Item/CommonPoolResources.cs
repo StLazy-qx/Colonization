@@ -8,7 +8,7 @@ public class CommonPoolResources : MonoBehaviour
     private List<Coin> _discoveredResources = new();
     private List<Coin> _usedResources = new();
 
-    public event Action AddNewResource;
+    public event Action ResourceToCollectioning;
 
     public void AddResource(Coin coin)
     {
@@ -22,7 +22,7 @@ public class CommonPoolResources : MonoBehaviour
         }
 
         _discoveredResources.Add(coin);
-        AddNewResource?.Invoke();
+        ResourceToCollectioning?.Invoke();
     }
 
     public bool TryGetResource(out Coin coin)
