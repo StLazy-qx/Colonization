@@ -107,17 +107,28 @@ public class Base : CreatableObject
 
     private void CollectResources()
     {
-        if (_isModeCollectResource)
+        //Debug.Log("Количество свободных рыцарей " + _knights.Where
+        //        (knight => knight.IsBusy == false).Count());
+
+        if (TryGetFreeKnight(out Knight knight))
         {
-            foreach (Knight freeKnight in _knights.Where
-                (knight => knight.IsBusy == false))
+            if (_resourcePool.TryGetResource(out Coin coin))
             {
-                if (_resourcePool.TryGetResource(out Coin coin))
-                {
-                    freeKnight.SetTargetCoin(coin);
-                }
+                knight.SetTargetCoin(coin);
             }
         }
+
+        //if (_isModeCollectResource)
+        //{
+        //    foreach (Knight freeKnight in _knights.Where
+        //        (knight => knight.IsBusy == false))
+        //    {
+        //        if (_resourcePool.TryGetResource(out Coin coin))
+        //        {
+        //            freeKnight.SetTargetCoin(coin);
+        //        }
+        //    }
+        //}
     }
 
     private void SendKnightBuildBase()

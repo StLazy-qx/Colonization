@@ -10,19 +10,21 @@ public class CommonPoolResources : MonoBehaviour
 
     public event Action ResourceToCollectioning;
 
+    //public bool CanGiveResource => _discoveredResources.Count > 0;
+
     public void AddResource(Coin coin)
     {
         CleanUsedResources();
 
-        if (coin == null
-            || _discoveredResources.Contains(coin)
-            || _usedResources.Contains(coin))
+        if (coin != null)
         {
-            return;
+            if (_discoveredResources.Contains(coin) == false 
+                && _usedResources.Contains(coin) == false)
+            {
+                ResourceToCollectioning?.Invoke();
+                _discoveredResources.Add(coin);
+            }
         }
-
-        _discoveredResources.Add(coin);
-        ResourceToCollectioning?.Invoke();
     }
 
     public bool TryGetResource(out Coin coin)
