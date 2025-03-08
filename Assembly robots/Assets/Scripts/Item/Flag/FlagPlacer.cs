@@ -42,7 +42,7 @@ public class FlagPlacer : MonoBehaviour
             SetFlagPosition(hitPoint);
 
             _selectedBase.SetBuildPosition(hitPoint);
-            _selectedBase.DisableResourceCollection();
+            _selectedBase.DisableSpawnUnitsMode();
 
             _selectedBase = null;
         }

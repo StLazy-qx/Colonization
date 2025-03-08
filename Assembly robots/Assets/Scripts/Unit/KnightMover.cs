@@ -40,8 +40,6 @@ public class KnightMover : MonoBehaviour
 
     public void MoveToBuildBasePoint(Vector3 position)
     {
-        _knight.ToBusy();
-
         Vector3 buildPoint = position +
             (transform.position - position).normalized * _distanceToFlag;
 
@@ -73,6 +71,7 @@ public class KnightMover : MonoBehaviour
 
     private void MoveToBaseSpawner(Vector3 position)
     {
+        _knight.ToBusy();
         StartCoroutine(MoveToTarget(position));
     }
 

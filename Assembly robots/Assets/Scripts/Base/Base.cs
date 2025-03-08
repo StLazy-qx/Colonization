@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -21,7 +20,7 @@ public class Base : CreatableObject
     private Vector3 _buildTargetPosition;
     private int _beginKnightsCount = 3;
     private int _minKnightsCount = 1;
-    private bool _isModeCollectResource = true;
+    private bool _isCollectResourceToUnitsSpawned = true;
 
     private List<Knight> _knights = new List<Knight>();
 
@@ -44,16 +43,19 @@ public class Base : CreatableObject
     {
         _wallet.NewBaseResourceSpended += SendKnightBuildBase;
         _wallet.NewUnitResourceSpended += CreateKnight;
-        _flagPlacer.Disabled += EnableResourceCollection;
-        _resourcePool.ResourceToCollectioning += CollectResources;
+        _flagPlacer.Disabled += EnableResourceCollectionToSpawnUnits;
     }
 
     private void OnDisable()
     {
         _wallet.NewBaseResourceSpended -= SendKnightBuildBase;
         _wallet.NewUnitResourceSpended -= CreateKnight;
-        _flagPlacer.Disabled -= EnableResourceCollection;
-        _resourcePool.ResourceToCollectioning += CollectResources;
+        _flagPlacer.Disabled -= EnableResourceCollectionToSpawnUnits;
+    }
+
+    private void Update()
+    {
+        CollectResources();
     }
 
     public void PlayClikAnimation()
@@ -63,9 +65,10 @@ public class Base : CreatableObject
 
     public void InItializeBuild()
     {
-        _isModeCollectResource = true;
         _beginKnightsCount = 0;
+
         _knights.Clear();
+        EnableResourceCollectionToSpawnUnits();
     }
 
     public void SetBuildPosition(Vector3 position)
@@ -87,14 +90,14 @@ public class Base : CreatableObject
         }
     }
 
-    public void EnableResourceCollection()
+    public void EnableResourceCollectionToSpawnUnits()
     {
-        _isModeCollectResource = true;
+        _isCollectResourceToUnitsSpawned = true;
     }
 
-    public void DisableResourceCollection()
+    public void DisableSpawnUnitsMode()
     {
-        _isModeCollectResource = false;
+        _isCollectResourceToUnitsSpawned = false;
 
         ModeChanged?.Invoke();
     }
@@ -107,9 +110,6 @@ public class Base : CreatableObject
 
     private void CollectResources()
     {
-        //Debug.Log("Количество свободных рыцарей " + _knights.Where
-        //        (knight => knight.IsBusy == false).Count());
-
         if (TryGetFreeKnight(out Knight knight))
         {
             if (_resourcePool.TryGetResource(out Coin coin))
@@ -117,18 +117,6 @@ public class Base : CreatableObject
                 knight.SetTargetCoin(coin);
             }
         }
-
-        //if (_isModeCollectResource)
-        //{
-        //    foreach (Knight freeKnight in _knights.Where
-        //        (knight => knight.IsBusy == false))
-        //    {
-        //        if (_resourcePool.TryGetResource(out Coin coin))
-        //        {
-        //            freeKnight.SetTargetCoin(coin);
-        //        }
-        //    }
-        //}
     }
 
     private void SendKnightBuildBase()
@@ -136,7 +124,7 @@ public class Base : CreatableObject
         if (HasKnights == false) 
             return;
 
-        if (_isModeCollectResource == false)
+        if (_isCollectResourceToUnitsSpawned == false)
         {
             if (TryGetFreeKnight(out Knight knight))
             {
@@ -148,14 +136,13 @@ public class Base : CreatableObject
                     _knights.Remove(_lostKnight);
                 }
             }
-
-            EnableResourceCollection();
         }
     }
 
     private bool TryGetFreeKnight(out Knight knight)
     {
-        knight = _knights.FirstOrDefault(knight => knight.IsBusy == false);
+        knight = _knights.FirstOrDefault
+            (knight => knight.IsBusy == false);
 
         return knight != null;
     }

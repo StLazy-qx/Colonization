@@ -46,7 +46,9 @@ public class ResourceScanner : MonoBehaviour
         foreach (Collider hit in hits)
         {
             if (hit.TryGetComponent(out Coin coin))
-                _resourcePool.AddResource(coin);
+            {
+                _resourcePool.Add(coin);
+            }
         }
     }
 }
