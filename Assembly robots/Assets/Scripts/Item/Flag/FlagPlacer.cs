@@ -29,7 +29,11 @@ public class FlagPlacer : MonoBehaviour
         if (_selectedBase == null && 
             hitObject.TryGetComponent(out Base selectedBase))
         {
-            selectedBase.PlayClikAnimation();
+            if (selectedBase.TryGetComponent
+                (out AnimationPlaybacker animation))
+            {
+                animation.PlayClikAnimation();
+            }
 
             if (selectedBase.HasKnights)
             {

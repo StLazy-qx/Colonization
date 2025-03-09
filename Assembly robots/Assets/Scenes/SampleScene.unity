@@ -1683,7 +1683,6 @@ MonoBehaviour:
   _flagPlacer: {fileID: 963194231}
   _knightCreator: {fileID: 7165215712909673443}
   _determinePoint: {fileID: 3603408694102402749}
-  _animator: {fileID: 20528434842181653}
 --- !u!4 &2083959022207777045
 Transform:
   m_ObjectHideFlags: 0
@@ -1814,6 +1813,7 @@ GameObject:
   - component: {fileID: 4955193019336666588}
   - component: {fileID: 3603408694102402749}
   - component: {fileID: 7165215712909673443}
+  - component: {fileID: 7165215712909673444}
   m_Layer: 3
   m_Name: Base
   m_TagString: Base
@@ -2349,6 +2349,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Template: {fileID: 6152452617049137970, guid: 01e634d88f59b7b43a5f06534071a17e, type: 3}
+--- !u!114 &7165215712909673444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2952276365247491020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd1953ad0170ff409cff9eb1572b773, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _animator: {fileID: 20528434842181653}
 --- !u!1 &7236709807030701469
 GameObject:
   m_ObjectHideFlags: 0

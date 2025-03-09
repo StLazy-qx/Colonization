@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(KnightMover),typeof(BaseBuilder))]
+[RequireComponent(typeof(Mover),typeof(BaseBuilder))]
 
 public class Knight : CreatableObject
 {
@@ -13,7 +13,7 @@ public class Knight : CreatableObject
     private Wallet _wallet;
     private Base _base;
     private BaseBuilder _baseBuilder;
-    private KnightMover _mover;
+    private Mover _mover;
 
     public event Action<Vector3> BaseBuildFinished;
 
@@ -25,7 +25,7 @@ public class Knight : CreatableObject
         IsBusy = false;
         _targetCoin = null;
         gameObject.layer = LayerMask.NameToLayer(_layerName);
-        _mover = GetComponent<KnightMover>();
+        _mover = GetComponent<Mover>();
         _baseBuilder = GetComponent<BaseBuilder>();
 
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer(_layerName),
@@ -54,21 +54,17 @@ public class Knight : CreatableObject
         ToFree();
     }
 
-    public void ToBusy()
-    {
+    public void ToBusy() =>
         IsBusy = true;
-    }
 
-    public void ToFree()
-    {
+    public void ToFree() =>
         IsBusy = false;
-    }
 
     public void SetTargetCoin(Coin coin)
     {
         VerifyCoin();
 
-        if (this.TryGetComponent(out KnightMover knightMover))
+        if (this.TryGetComponent(out Mover knightMover))
         {
             _targetCoin = coin;
             knightMover.GoToTarget(coin.transform.position);

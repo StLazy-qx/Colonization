@@ -16,8 +16,6 @@ public class ViewWalletBalance : MonoBehaviour
         _wallet.BalanceChanged -= OnValueChange;
     }
 
-    private void OnValueChange(int value)
-    {
+    private void OnValueChange(int value)=>
         _balanceText.text = $"{value}";
-    }
 }

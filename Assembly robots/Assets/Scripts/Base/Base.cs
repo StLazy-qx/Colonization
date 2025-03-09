@@ -7,13 +7,10 @@ using UnityEngine;
 
 public class Base : CreatableObject
 {
-    private readonly int _clickOnBaseAnimation = Animator.StringToHash("ClickOnBase");
-
     [SerializeField] private CommonPoolResources _resourcePool;
     [SerializeField] private FlagPlacer _flagPlacer;
     [SerializeField] private KnightCreator _knightCreator;
     [SerializeField] private DeterminePointSpawner _determinePoint;
-    [SerializeField] private Animator _animator;
 
     private Wallet _wallet;
     private Knight _lostKnight;
@@ -58,11 +55,6 @@ public class Base : CreatableObject
         CollectResources();
     }
 
-    public void PlayClikAnimation()
-    {
-        _animator.SetTrigger(_clickOnBaseAnimation);
-    }
-
     public void InItializeBuild()
     {
         _beginKnightsCount = 0;
@@ -84,7 +76,7 @@ public class Base : CreatableObject
         _knights.Add(knight);
         knight.Initialize(_wallet, this);
 
-        if (knight.TryGetComponent(out KnightMover mover))
+        if (knight.TryGetComponent(out Mover mover))
         {
             mover.GoToTarget(_determinePoint.GetPosition());
         }
@@ -130,7 +122,7 @@ public class Base : CreatableObject
             {
                 _lostKnight = knight;
 
-                if (_lostKnight.TryGetComponent(out KnightMover knightMover))
+                if (_lostKnight.TryGetComponent(out Mover knightMover))
                 {
                     knightMover.MoveToBuildBasePoint(_buildTargetPosition);
                     _knights.Remove(_lostKnight);

@@ -16,7 +16,10 @@ public class ResourceScanner : MonoBehaviour
         _delay = new WaitForSeconds(_interval);
     }
 
-    private void Start() => BeginScanning();
+    private void Start()
+    {
+        BeginScanning();
+    }
 
     private void BeginScanning()
     {

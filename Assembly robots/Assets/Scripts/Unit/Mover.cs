@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class KnightMover : MonoBehaviour
+public class Mover : MonoBehaviour
 {
     [SerializeField] private Knight _knight;
     [SerializeField] private Transform _checkPoint;
