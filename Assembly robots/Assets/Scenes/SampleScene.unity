@@ -2334,7 +2334,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _base: {fileID: 1856916557201416863}
   _unitPrice: 3
-  _basePrice: 5
+  _basePrice: 1
   _isModeBuildBase: 0
 --- !u!114 &7165215712909673443
 MonoBehaviour:

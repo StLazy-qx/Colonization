@@ -75,11 +75,6 @@ public class Base : CreatableObject
 
         _knights.Add(knight);
         knight.Initialize(_wallet, this);
-
-        if (knight.TryGetComponent(out Mover mover))
-        {
-            mover.GoToTarget(_determinePoint.GetPosition());
-        }
     }
 
     public void EnableResourceCollectionToSpawnUnits()
@@ -122,7 +117,7 @@ public class Base : CreatableObject
             {
                 _lostKnight = knight;
 
-                if (_lostKnight.TryGetComponent(out Mover knightMover))
+                if (_lostKnight.TryGetComponent(out UnitMover knightMover))
                 {
                     knightMover.MoveToBuildBasePoint(_buildTargetPosition);
                     _knights.Remove(_lostKnight);

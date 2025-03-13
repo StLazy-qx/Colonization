@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Mover),typeof(BaseBuilder))]
+[RequireComponent(typeof(UnitMover),typeof(BaseBuilder))]
 
 public class Knight : CreatableObject
 {
@@ -13,19 +13,18 @@ public class Knight : CreatableObject
     private Wallet _wallet;
     private Base _base;
     private BaseBuilder _baseBuilder;
-    private Mover _mover;
+    private UnitMover _mover;
 
     public event Action<Vector3> BaseBuildFinished;
 
     public bool IsBusy { get; private set; }
-    public bool HasTargetCoin => _targetCoin;
 
     private void Awake()
     {
         IsBusy = false;
         _targetCoin = null;
         gameObject.layer = LayerMask.NameToLayer(_layerName);
-        _mover = GetComponent<Mover>();
+        _mover = GetComponent<UnitMover>();
         _baseBuilder = GetComponent<BaseBuilder>();
 
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer(_layerName),
@@ -35,11 +34,15 @@ public class Knight : CreatableObject
     private void OnEnable()
     {
         _mover.FlagReached += BuildBase;
+        _mover.GoingToSubjectFinished += PickUpCoin;
+        _mover.CameBacked += DropOffCoin;
     }
 
     private void OnDisable()
     {
         _mover.FlagReached -= BuildBase;
+        _mover.GoingToSubjectFinished -= PickUpCoin;
+        _mover.CameBacked -= DropOffCoin;
     }
 
     public void Initialize(Wallet wallet, Base @base)
@@ -62,16 +65,20 @@ public class Knight : CreatableObject
 
     public void SetTargetCoin(Coin coin)
     {
-        VerifyCoin();
+        if (IsBusy)
+            return;
 
-        if (this.TryGetComponent(out Mover knightMover))
-        {
-            _targetCoin = coin;
-            knightMover.GoToTarget(coin.transform.position);
-        }
+        _targetCoin = coin;
+
+        ToBusy();
+        VerifyCoin();
+        _mover.GoToTarget(coin.transform.position);
+
+        if(_targetCoin == null)
+            ToFree();
     }
 
-    public void PickUpCoin()
+    private void PickUpCoin()
     {
         VerifyCoin();
 
@@ -79,7 +86,7 @@ public class Knight : CreatableObject
         _targetCoin.SetHoldState(_holdPoint.position);
     }
 
-    public void DropOffCoin()
+    private void DropOffCoin()
     {
         VerifyCoin();
         _targetCoin.StopHolded();
@@ -97,10 +104,13 @@ public class Knight : CreatableObject
 
     private void BuildBase(Vector3 buildPosition)
     {
+        ToBusy();
+        _mover.MoveToBuildBasePoint(buildPosition);
+
         Base newBase = (Base)_baseBuilder.Create(buildPosition);
+        transform.position = newBase.SpawnPosition.position;
 
         newBase.AcceptKnight(this);
-        transform.position = newBase.SpawnPosition.position;
         ToFree();
     }
 }

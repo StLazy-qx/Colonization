@@ -2,9 +2,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class Mover : MonoBehaviour
+public class UnitMover : MonoBehaviour
 {
-    [SerializeField] private Knight _knight;
     [SerializeField] private Transform _checkPoint;
     [SerializeField] private ObstacleMoveHandler _obstacleHandler;
 
@@ -17,6 +16,8 @@ public class Mover : MonoBehaviour
     private float _distanceToFlag = 3f;
 
     public event Action<Vector3> FlagReached;
+    public event Action GoingToSubjectFinished;
+    public event Action CameBacked;
 
     private void Awake()
     {
@@ -26,16 +27,6 @@ public class Mover : MonoBehaviour
     private void Start()
     {
         _obstacleHandler.Init(_rigidbody, _moveSpeed);
-    }
-
-    private void OnEnable()
-    {
-        _knight.BaseBuildFinished += MoveToBaseSpawner;
-    }
-
-    private void OnDisable()
-    {
-        _knight.BaseBuildFinished -= MoveToBaseSpawner;
     }
 
     public void MoveToBuildBasePoint(Vector3 position)
@@ -50,49 +41,12 @@ public class Mover : MonoBehaviour
 
     public void GoToTarget(Vector3 targetPosition)
     {
-        if (_knight.IsBusy)
-            return;
-
-        _knight.ToBusy();
-
         _collectionPosition = transform.position;
 
-        if (_knight.HasTargetCoin)
-        {
-            StartCoroutine(MoveSequence(targetPosition,
-                () => _knight.PickUpCoin(), _collectionPosition,
-                () => _knight.DropOffCoin(), ResetPosition));
-        }
-        else
-        {
-            _knight.ToFree();
-        }
+        StartCoroutine(MoveSequence(targetPosition, _collectionPosition));
     }
 
-    private void MoveToBaseSpawner(Vector3 position)
-    {
-        _knight.ToBusy();
-        StartCoroutine(MoveToTarget(position));
-    }
-
-    private IEnumerator MoveSequence(Vector3 target, Action onAction)
-    {
-        yield return MoveToTarget(target);
-        onAction?.Invoke();
-    }
-
-    private IEnumerator MoveSequence(Vector3 target1, Action action1, Vector3 target2, Action action2, Action action3)
-    {
-        yield return MoveToTarget(target1);
-        action1?.Invoke();
-
-        yield return MoveToTarget(target2);
-        action2?.Invoke();
-
-        action3?.Invoke();
-    }
-
-    private IEnumerator MoveToTarget(Vector3 target)
+    public IEnumerator MoveToTarget(Vector3 target)
     {
         Vector3 flatTarget = new Vector3(target.x, transform.position.y, target.z);
 
@@ -108,6 +62,23 @@ public class Mover : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    private IEnumerator MoveSequence(Vector3 target, Action onAction)
+    {
+        yield return MoveToTarget(target);
+        onAction?.Invoke();
+    }
+
+    private IEnumerator MoveSequence(Vector3 target1, Vector3 target2)
+    {
+        yield return MoveToTarget(target1);
+        GoingToSubjectFinished?.Invoke();
+
+        yield return MoveToTarget(target2);
+        CameBacked?.Invoke();
+
+        ResetPosition();
     }
 
     private void MoveTowards(Vector3 target)
@@ -138,7 +109,6 @@ public class Mover : MonoBehaviour
     private void OnFlagReached()
     {
         FlagReached?.Invoke(_baseBuildPosition);
-        _knight.ToFree();
     }
 
     private void ResetPosition()
